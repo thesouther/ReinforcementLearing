@@ -45,7 +45,7 @@ if __name__ == "__main__":
                       e_greedy=0.9,
                       replace_target_iter=200,
                       memory_size=2000,
-                      # output_graph=True
+                       output_graph=True
                       )
     env.after(100, run_maze)
     env.mainloop()
