@@ -45,11 +45,10 @@
 from PIL import Image
 im = Image.open('westbrook.jpg')
 pix = im.load()
-print(pix)
-w,h = im.size
-newim = Image.new("RGB", (w,h))
+w, h = im.size
+newim = Image.new("RGB", (w, h))
 for i in range(w):
     for j in range(h):
-        r,g,b = pix[i,j]
-        newim.putpixel((i,j),(r//2,g//2,b//2))
+        r, g, b = pix[i, j]
+        newim.putpixel((i, j), (r//2, g//2, b//2))
 newim.save('Q2.jpg', 'jpeg')
