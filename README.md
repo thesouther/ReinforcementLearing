@@ -5,3 +5,4 @@
 todo:
 
 - [ ] Q-Learning
+- [ ] DQN
