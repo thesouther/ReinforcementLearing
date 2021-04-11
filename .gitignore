@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 run.sh
+results/
+.vscode/
 
 # C extensions
 *.so
