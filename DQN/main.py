@@ -8,18 +8,27 @@ import torch.optim as optim
 
 from config import Config
 from utils import ReplayBuffer, curve_plot
-from model import DQN
+from model import CnnDQN, DQN
+from wrappers import *
 
 conf = Config()
 device = conf.device
 
 
 def train():
-    env = gym.make(conf.env_name)
+    if conf.env_module == "img":
+        env = make_atari(conf.env_name)
+        env = bench.Monitor(env, os.path.join(conf.path_game_scan, conf.env_name))
+        env = wrap_deepmind(env, episode_life=True, clip_rewards=True, frame_stack=False, scale=True)
+        env = WrapPyTorch(env)
+        model = CnnDQN(env, device)
+        target_model = CnnDQN(env, device)
+    else:
+        env = gym.make(conf.env_name)
+        # Instantiate
+        model = DQN(env, device)
+        target_model = DQN(env, device)
 
-    # Instantiate
-    model = DQN(env, conf)
-    target_model = DQN(env, conf)
     target_model.load_state_dict(model.state_dict())
     model, target_model = model.to(device), target_model.to(device)
 
@@ -39,8 +48,9 @@ def train():
         with torch.no_grad():
             next_q_value = target_model(s_).max(1)[0]
             expected_q_value = r + conf.gamma * next_q_value * (1 - d)
+            expected_q_value.to(device)
 
-        loss = (q_value - conf.Variable(expected_q_value.data)).pow(2).mean()
+        loss = (q_value - expected_q_value).pow(2).mean()
         optimizer.zero_grad()
         loss.backward()
         for param in model.parameters():
@@ -52,7 +62,7 @@ def train():
     episode_reward = 0
     losses = []
     all_rewards = []
-    state = env.reset()
+    state = env.reset()  # (1, 84, 84)
     for frame_idx in range(1, conf.num_frames + 1):
         epsilon = conf.epsilon_by_frame(frame_idx)
         action = model.act(state, epsilon)
@@ -77,9 +87,11 @@ def train():
 
         if frame_idx % conf.log_freq == 0:
             print("frame: {}, loss: {}, reward: {}.".format(frame_idx, loss, episode_reward))
-            curve_name = "res_" + conf.exp_name + ".png"
-            curve_path = os.path.join(conf.path_plot, curve_name)
-            curve_plot(curve_path, frame_idx, all_rewards, losses)
+
+    if conf.save_curve:
+        curve_name = "res_" + conf.exp_name + ".png"
+        curve_path = os.path.join(conf.path_plot, curve_name)
+        curve_plot(curve_path, frame_idx, all_rewards, losses)
 
 
 if __name__ == "__main__":
