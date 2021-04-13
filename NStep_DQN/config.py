@@ -40,14 +40,14 @@ class Config:
         exp_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
         self.exp_name = self.alg_name + "_" + self.env_name + "_" + exp_time
 
-        path_game_scan = os.path.join(root_path, "results", self.alg_name)
-        if not os.path.isdir(path_game_scan):
-            os.mkdir(path_game_scan)
+        self.path_game_scan = os.path.join(root_path, "results", self.alg_name)
+        if not os.path.isdir(self.path_game_scan):
+            os.mkdir(self.path_game_scan)
 
-        self.path_plot = os.path.join(path_game_scan, "plot_" + self.exp_name + ".dump")
-        self.path_models = os.path.join(path_game_scan, "model_" + self.exp_name + ".dump")
-        self.path_optim = os.path.join(path_game_scan, "optim_" + self.exp_name + ".dump")
-        self.path_memory = os.path.join(path_game_scan, "buffer_" + self.exp_name + ".dump")
-        self.path_sig_param = os.path.join(path_game_scan, "sig_param_" + self.exp_name + ".csv")
-        self.path_td = os.path.join(path_game_scan, "td_" + self.exp_name + ".csv")
-        self.path_action_log = os.path.join(path_game_scan, "actions_" + self.exp_name + ".csv")
+        self.path_plot = os.path.join(self.path_game_scan, "plot_" + self.exp_name + ".dump")
+        self.path_models = os.path.join(self.path_game_scan, "model_" + self.exp_name + ".dump")
+        self.path_optim = os.path.join(self.path_game_scan, "optim_" + self.exp_name + ".dump")
+        self.path_memory = os.path.join(self.path_game_scan, "buffer_" + self.exp_name + ".dump")
+        self.path_sig_param = os.path.join(self.path_game_scan, "sig_param_" + self.exp_name + ".csv")
+        self.path_td = os.path.join(self.path_game_scan, "td_" + self.exp_name + ".csv")
+        self.path_action_log = os.path.join(self.path_game_scan, "actions_" + self.exp_name + ".csv")
