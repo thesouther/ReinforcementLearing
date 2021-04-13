@@ -25,7 +25,6 @@ class Config:
         self.log_freq = 200
         self.learn_start = 3000
         self.update_freq = 1
-        self.n_steps = 1
         #data logging parameters
         self.action_selection_count_frequency = 1000
 

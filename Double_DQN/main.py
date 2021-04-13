@@ -24,7 +24,6 @@ def train():
 
     episode_reward = 0
     losses = []
-    all_rewards = []
     state = env.reset()  # (1, 84, 84)
     for frame_idx in range(1, conf.max_train_steps + 1):
         epsilon = conf.epsilon_by_frame(frame_idx)
@@ -33,22 +32,18 @@ def train():
         # agent.save_action(action, frame_idx)
 
         next_state, reward, done, _ = env.step(action)
-        next_state = None if done else next_state
         loss = agent.update(state, action, reward, next_state, done, test=False, frame=frame_idx)
 
         # state = next_state
         episode_reward += reward
 
         if done:
-            agent.finish_nstep()
             state = env.reset()
             agent.save_reward(episode_reward)
             episode_reward = 0
-        if loss is not None:
-            losses.append(loss.item())
 
         if frame_idx % conf.log_freq == 0 and loss:
-            print("frame: {}, loss: {}, reward: {}.".format(frame_idx, loss.item(), episode_reward))
+            print("frame: {}, reward: {}.".format(frame_idx, episode_reward))
 
     if conf.save_curve:
         curve_plot(conf.path_plot, frame_idx, agent.all_rewards, losses)
