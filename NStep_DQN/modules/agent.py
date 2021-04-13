@@ -89,8 +89,8 @@ class Agent(BaseAgent):
         self.n_actions = env.action_space.n
 
         # DQN model
-        self.model = DQN(env, self.device, noisy=False, sigma_init=0.0)
-        self.target_model = DQN(env, self.device, noisy=False, sigma_init=0.0)
+        self.model = DQN(env, self.device)
+        self.target_model = DQN(env, self.device)
         self.target_model.load_state_dict(self.model.state_dict())
         self.model, self.target_model = self.model.to(self.device), self.target_model.to(self.device)
 
