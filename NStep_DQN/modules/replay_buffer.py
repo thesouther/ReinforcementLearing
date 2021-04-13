@@ -15,7 +15,7 @@ class ReplayBuffer():
 
     def sample(self, bs):
         state, action, reward, next_state, done = zip(*random.sample(self.buffer, bs))
-        return np.concatenate(state), action, reward, np.concatenate(next_state), done
+        return state, action, reward, next_state, done
 
     def __len__(self):
         return len(self.buffer)

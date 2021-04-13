@@ -2,6 +2,7 @@ import pickle
 import os, csv
 import os.path as osp
 import numpy as np
+import random
 
 import torch
 import torch.optim as optim
@@ -31,7 +32,7 @@ class BaseAgent:
 
     def save_w(self):
         torch.save(self.model.state_dict(), self.conf.path_models)
-        torch.seve(self.optimizer.state_dict(), self.conf.path_optim)
+        torch.save(self.optimizer.state_dict(), self.conf.path_optim)
 
     def load_w(self):
         if osp.isfile(self.conf.path_models):
@@ -112,32 +113,97 @@ class Agent(BaseAgent):
             return
 
         R = sum([self.nstep_buffer[i][2] * (self.conf.gamma**i) for i in range(self.n_steps)])
-        state, action, _, _ = self.nstep_buffer.pop(0)
-        self.replay_buffer.push((state, action, R, s_, d))
+        state, action, _, _, _ = self.nstep_buffer.pop(0)
+        self.replay_buffer.push(state, action, R, s_, d)
 
     def compute_loss(self, batch_size):
         s, a, r, s_, d = self.replay_buffer.sample(batch_size)
 
         fea_shape = (-1, ) + self.input_shape
-        s = torch.tensor(np.float32(s), device=self.device, dtype=torch.float).view(fea_shape)
-        s_ = torch.tensor(np.float32(s_), device=self.device, dtype=torch.float).view(fea_shape)
+        # [32, 1, 84, 84]
+        s = torch.tensor(s, device=self.device, dtype=torch.float).view(fea_shape)
+        # [32, 1]
         a = torch.tensor(a, device=self.device, dtype=torch.long).squeeze().view(-1, 1)
         r = torch.tensor(r, device=self.device, dtype=torch.float).squeeze().view(-1, 1)
         d = torch.tensor(d, device=self.device, dtype=torch.float).squeeze().view(-1, 1)
+        # 计算非最终状态的掩码并连接batch元素
+        non_final_mask = torch.tensor(tuple(map(lambda s: s is not None, s_)),
+                                      device=self.device,
+                                      dtype=torch.bool)
+        try:  #sometimes all next states are false [32, 1, 84, 84]
+            non_final_s_ = torch.tensor([s for s in s_ if s is not None],
+                                        device=self.device,
+                                        dtype=torch.float).view(fea_shape)
+            empty_next_state_values = False
+        except:
+            non_final_s_ = None
+            empty_next_state_values = True
 
+        # [32, 1]
         q_value = self.model(s).gather(1, a)
 
-        # td target
+        # td target [32, 1]
         with torch.no_grad():
-            next_q_value = self.target_model(s_).max(1)[0]
-            expected_q_value = r + self.conf.gamma * next_q_value * (1 - d)
+            max_next_q_values = torch.zeros(batch_size, device=self.device, dtype=torch.float).unsqueeze(1)
+            if not empty_next_state_values:
+                max_next_a = self.target_model(non_final_s_).max(1)[1].view(-1, 1)
+                max_next_q_values[non_final_mask] = self.target_model(non_final_s_).gather(1, max_next_a)
+            expected_q_value = r + ((self.conf.gamma**self.n_steps) * max_next_q_values)
             expected_q_value.to(self.device)
 
-        loss = (q_value - expected_q_value).pow(2).mean()
-        # self.optimizer.zero_grad()
-        # loss.backward()
-        # for param in model.parameters():
-        #     param.grad.data.clamp_(-1, 1)
-        # optimizer.step()
+        loss = self.MSE(q_value - expected_q_value).mean()
 
         return loss
+
+    def update(self, state, action, reward, next_state, done, test=False, frame=0):
+        # test 不用前传
+        if test:
+            return None
+
+        # 填充经验池
+        self.append_to_replay(state, action, reward, next_state, done)
+
+        if frame < self.conf.learn_start or frame % self.conf.update_freq != 0:
+            return None
+
+        # 更新loss
+        loss = self.compute_loss(self.conf.batch_size)
+        # optimizer
+        self.optimizer.zero_grad()
+        loss.backward()
+        for param in self.model.parameters():
+            param.grad.data.clamp_(-1, 1)
+        self.optimizer.step()
+
+        # update target net
+        if frame % self.conf.target_upfreq == 0:
+            self.target_model.load_state_dict(self.model.state_dict())
+
+        # save data
+        self.save_td(loss.item(), frame)
+        self.save_sigma_param_magnitudes(frame)
+        return loss
+
+    def act(self, state, epsilon, test=False):
+        """
+        state: [1, 84, 84]
+        """
+        with torch.no_grad():
+            if random.random() >= epsilon or test:
+                # [1, 1, 84, 84]
+                state = torch.tensor(state, device=self.device, dtype=torch.float).unsqueeze(0)
+                q_value = self.model(state)
+                action = q_value.max(1)[1].view(1, 1)
+                return action.item()
+            else:
+                return random.randrange(self.n_actions)
+
+    def finish_nstep(self):
+        while len(self.nstep_buffer) > 0:
+            R = sum([self.nstep_buffer[i][2] * (self.conf.gamma**i) for i in range(len(self.nstep_buffer))])
+            state, action, _, _, d = self.nstep_buffer.pop(0)
+
+            self.replay_buffer.push(state, action, R, None, d)
+
+    def reset_hx(self):
+        pass

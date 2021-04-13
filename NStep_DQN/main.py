@@ -29,33 +29,30 @@ def train():
     for frame_idx in range(1, conf.max_train_steps + 1):
         epsilon = conf.epsilon_by_frame(frame_idx)
 
-        # action = model.act(state, epsilon)
+        action = agent.act(state, epsilon, test=False)
+        # agent.save_action(action, frame_idx)
 
-        # next_state, reward, done, _ = env.step(action)
-        # replay_buffer.push(state, action, reward, next_state, done)
+        next_state, reward, done, _ = env.step(action)
+        next_state = None if done else next_state
+        loss = agent.update(state, action, reward, next_state, done, test=False, frame=frame_idx)
 
         # state = next_state
-        # episode_reward += reward
+        episode_reward += reward
 
-        # if done:
-        #     state = env.reset()
-        #     all_rewards.append(episode_reward)
-        #     episode_reward = 0
+        if done:
+            agent.finish_nstep()
+            state = env.reset()
+            agent.save_reward(episode_reward)
+            episode_reward = 0
+        if loss is not None:
+            losses.append(loss.item())
 
-        # if len(replay_buffer) > conf.batch_size:
-        #     loss = cal_td_loss(model, conf.batch_size)
-        #     losses.append(loss.item())
-
-        # if frame_idx % conf.target_upfreq == 0:
-        #     target_model.load_state_dict(model.state_dict())
-
-        if frame_idx % conf.log_freq == 0:
-            print("frame: {}, loss: {}, reward: {}.".format(frame_idx, loss, episode_reward))
+        if frame_idx % conf.log_freq == 0 and loss:
+            print("frame: {}, loss: {}, reward: {}.".format(frame_idx, loss.item(), episode_reward))
 
     if conf.save_curve:
-        curve_name = "res_" + conf.exp_name + ".png"
-        curve_path = os.path.join(conf.path_plot, curve_name)
-        curve_plot(curve_path, frame_idx, all_rewards, losses)
+        curve_plot(conf.path_plot, frame_idx, all_rewards, losses)
+        # agent.save_w()
 
 
 if __name__ == "__main__":

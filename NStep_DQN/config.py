@@ -1,6 +1,7 @@
 import os
 import torch
 import math
+import time
 
 from torch import autograd
 
@@ -11,6 +12,7 @@ class Config:
         self.device = torch.device("cuda" if use_cuda else "cpu")
 
         self.env_name = "PongNoFrameskip-v4"  # "CartPole-v0"
+        self.alg_name = "NStep_DQN"
         self.env_module = "img"  # ["img", "vect"]
         self.save_curve = True
 
@@ -35,17 +37,17 @@ class Config:
                                - self.epsilon_final) * math.exp(-1. * frame_idx / self.epsilon_decay)
 
         root_path = os.path.dirname(os.path.dirname(__file__))
-        self.alg_name = "NStep_DQN"
-        self.exp_name = self.alg_name + "_" + self.env_name
-        self.path_plot = os.path.join(root_path, "results", "plots")
-        self.path_models = os.path.join(root_path, "results", "models", self.exp_name + "_model.dump")
-        self.path_optim = os.path.join(root_path, "results", "models", self.exp_name + "_optim.dump")
-        self.path_memory = os.path.join(root_path, "results", "models", self.exp_name + "_memory.dump")
-        self.path_sig_param = os.path.join(root_path, "results", "models", self.exp_name + "_sig_param.csv")
-        self.path_td = os.path.join(root_path, "results", "models", self.exp_name + "_td.csv")
-        self.path_action_log = os.path.join(root_path, "results", "models", self.exp_name + "_action_log.csv")
+        exp_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
+        self.exp_name = self.alg_name + "_" + self.env_name + "_" + exp_time
 
-        self.path_game_scan = os.path.join(root_path, "logs", self.alg_name)
+        path_game_scan = os.path.join(root_path, "results", self.alg_name)
+        if not os.path.isdir(path_game_scan):
+            os.mkdir(path_game_scan)
 
-        if not os.path.isdir(self.path_game_scan):
-            os.mkdir(self.path_game_scan)
+        self.path_plot = os.path.join(path_game_scan, "plot_" + self.exp_name + ".dump")
+        self.path_models = os.path.join(path_game_scan, "model_" + self.exp_name + ".dump")
+        self.path_optim = os.path.join(path_game_scan, "optim_" + self.exp_name + ".dump")
+        self.path_memory = os.path.join(path_game_scan, "buffer_" + self.exp_name + ".dump")
+        self.path_sig_param = os.path.join(path_game_scan, "sig_param_" + self.exp_name + ".csv")
+        self.path_td = os.path.join(path_game_scan, "td_" + self.exp_name + ".csv")
+        self.path_action_log = os.path.join(path_game_scan, "actions_" + self.exp_name + ".csv")

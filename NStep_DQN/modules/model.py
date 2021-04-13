@@ -33,16 +33,6 @@ class DQN(nn.Module):
         tmp = torch.zeros(1, *self.input_shape)
         return self.features(tmp).view(1, -1).size(1)
 
-    def act(self, state, epsilon, test=False):
-        with torch.no_grad():
-            if random.random() >= epsilon or test:
-                state = torch.tensor(state, dtype=torch.float).unsqueeze(0).to(self.device)
-                q_value = self.forward(state)
-                action = q_value.max(1)[1].view(1, 1)
-                return action.item()
-            else:
-                return random.randrange(self.n_actions)
-
 
 class NoisyLinear(nn.Module):
     def __init__(self, in_features, out_features, std_init=0.4, factorised_noise=True):
