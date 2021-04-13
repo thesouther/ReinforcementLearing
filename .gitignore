@@ -6,6 +6,7 @@ run.sh
 results/
 .vscode/
 logs/
+*.log
 
 # C extensions
 *.so
