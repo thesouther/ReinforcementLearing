@@ -12,7 +12,7 @@ class Config:
         self.device = torch.device("cuda" if use_cuda else "cpu")
 
         self.env_name = "PongNoFrameskip-v4"  # "CartPole-v0"
-        self.alg_name = "NStep_DQN"
+        self.alg_name = "Double_DQN"
         self.env_module = "img"  # ["img", "vect"]
         self.save_curve = True
 
