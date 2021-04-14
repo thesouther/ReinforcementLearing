@@ -30,10 +30,10 @@ class Config:
 
         root_path = os.path.dirname(os.path.dirname(__file__))
         self.exp_name = "DQN_" + self.env_name
-        self.path_plot = os.path.join(root_path, "results", "plots")
+        self.path_plot = os.path.join(root_path, "results", "DQN")
 
-        file_game_scan = "gym"
-        self.path_game_scan = os.path.join(root_path, "logs", file_game_scan)
+        file_game_scan = "DQN"
+        self.path_game_scan = os.path.join(root_path, "results", file_game_scan)
 
         if not os.path.isdir(self.path_game_scan):
             os.mkdir(self.path_game_scan)
