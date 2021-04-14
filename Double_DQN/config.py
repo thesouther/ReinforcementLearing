@@ -13,24 +13,23 @@ class Config:
 
         self.env_name = "PongNoFrameskip-v4"  # "CartPole-v0"
         self.alg_name = "Double_DQN"
-        self.env_module = "img"  # ["img", "vect"]
         self.save_curve = True
 
         self.epsilon_start = 1.0
-        self.epsilon_final = 0.005
-        self.epsilon_decay = 30000
-        self.buffer_size = 100000
+        self.epsilon_final = 0.01
+        self.epsilon_decay = 5000
+        self.buffer_size = 10000
 
         self.target_upfreq = 1000
-        self.log_freq = 200
-        self.learn_start = 3000
+        self.log_freq = 100
+        self.learn_start = 1000
         self.update_freq = 1
         #data logging parameters
         self.action_selection_count_frequency = 1000
 
         self.gamma = 0.99
         self.batch_size = 32
-        self.max_train_steps = 1000000
+        self.max_train_steps = 100000
         self.lr = 1e-4
 
         self.epsilon_by_frame = lambda frame_idx: self.epsilon_final + (self.epsilon_start \

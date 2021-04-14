@@ -17,20 +17,20 @@ class Config:
         self.save_curve = True
 
         self.epsilon_start = 1.0
-        self.epsilon_final = 0.005
-        self.epsilon_decay = 30000
-        self.buffer_size = 100000
+        self.epsilon_final = 0.01
+        self.epsilon_decay = 3000
+        self.buffer_size = 10000
 
         self.target_upfreq = 1000
         self.log_freq = 200
-        self.learn_start = 3000
+        self.learn_start = 1000
         self.update_freq = 1
-        self.n_steps = 4
+        self.n_steps = 3
         self.action_selection_count_frequency = 1000
 
-        self.gamma = 0.99
+        self.gamma = 0.995
         self.batch_size = 32
-        self.max_train_steps = 1000000
+        self.max_train_steps = 100000
         self.lr = 1e-4
 
         self.epsilon_by_frame = lambda frame_idx: self.epsilon_final + (self.epsilon_start \

@@ -33,7 +33,8 @@ def train():
 
         next_state, reward, done, _ = env.step(action)
         loss = agent.update(state, action, reward, next_state, done, test=False, frame=frame_idx)
-
+        if loss:
+            losses.append(loss.item())
         # state = next_state
         episode_reward += reward
 
@@ -43,7 +44,7 @@ def train():
             episode_reward = 0
 
         if frame_idx % conf.log_freq == 0 and loss:
-            print("frame: {}, reward: {}.".format(frame_idx, episode_reward))
+            print("frame: {}, loss: {}, reward: {}.".format(frame_idx, loss.item(), episode_reward))
 
     if conf.save_curve:
         curve_plot(conf.path_plot, frame_idx, agent.all_rewards, losses)
